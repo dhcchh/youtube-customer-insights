@@ -3,7 +3,7 @@ import pandas as pd
 import unicodedata
 
 
-class YouTubeCommentCleaner:
+class BERTYouTubeCommentCleaner:
     """
     Minimal text cleaner optimized for BERT-based sentiment analysis.
     Preserves natural language patterns that BERT handles well.
