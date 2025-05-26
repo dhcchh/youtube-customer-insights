@@ -210,11 +210,11 @@ def quick_sentiment_summary(df):
     # Risk assessment
     print(f"\nRisk Assessment:")
     if negative_pct > 40:
-        print("⚠️  HIGH NEGATIVE SENTIMENT - Requires immediate attention")
+        print("HIGH NEGATIVE SENTIMENT - Requires immediate attention")
     elif negative_pct > 25:
-        print("⚡ MODERATE NEGATIVE SENTIMENT - Monitor closely")
+        print("MODERATE NEGATIVE SENTIMENT - Monitor closely")
     else:
-        print("✅ LOW NEGATIVE SENTIMENT - Good customer satisfaction")
+        print("LOW NEGATIVE SENTIMENT - Good customer satisfaction")
 
 
 
@@ -236,7 +236,7 @@ class SentimentValidator:
         self.df = sentiment_df
         
         # Validate required columns exist
-        required_cols = ['text', 'sentiment_label', 'sentiment_confidence']
+        required_cols = ['cleaned_text', 'sentiment_label', 'sentiment_confidence']
         missing_cols = [col for col in required_cols if col not in self.df.columns]
         if missing_cols:
             raise ValueError(f"Missing required columns: {missing_cols}")
