@@ -60,7 +60,7 @@ class BERTYouTubeCommentCleaner:
         if self.remove_mentions:
             cleaned = re.sub(r'@\w+', '[USER]', cleaned)
             
-        # 4. Remove emojis (BERT can't process them reliably)
+        # 4. Remove emojis 
         # Remove all characters that are symbols/pictographs
         cleaned = ''.join(char for char in cleaned 
                          if not (0x1F000 <= ord(char) <= 0x1FFFF or 
