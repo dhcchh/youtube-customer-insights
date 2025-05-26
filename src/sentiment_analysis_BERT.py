@@ -372,13 +372,13 @@ class SentimentValidator:
         # Flag potential issues
         warnings = []
         if len(very_low) / len(self.df) > 0.2:  # >20% very low confidence
-            warnings.append("⚠️  High proportion of very low confidence predictions")
+            warnings.append("High proportion of very low confidence predictions")
         
         if conf_stats['mean'] < 0.6:
-            warnings.append("⚠️  Low average confidence - model may be struggling")
+            warnings.append("Low average confidence - model may be struggling")
         
         if conf_stats['std'] < 0.1:
-            warnings.append("⚠️  Very low confidence variance - check for bias")
+            warnings.append("Very low confidence variance - check for bias")
         
         if warnings:
             print(f"\nWarnings:")
@@ -426,26 +426,26 @@ class SentimentValidator:
         positive_pct = sentiment_dist.get('Positive', 0) + very_positive_pct
         
         if very_negative_pct > 40:
-            warnings.append("⚠️  Extremely high 'Very Negative' sentiment - validate manually")
+            warnings.append("Extremely high 'Very Negative' sentiment - validate manually")
         
         if very_positive_pct > 60:
-            warnings.append("⚠️  Suspiciously high 'Very Positive' sentiment - check for bias")
+            warnings.append("Suspiciously high 'Very Positive' sentiment - check for bias")
         
         if negative_pct > 70:
-            warnings.append("⚠️  Overwhelming negative sentiment - verify data quality")
+            warnings.append("Overwhelming negative sentiment - verify data quality")
         
         if positive_pct > 80:
-            warnings.append("⚠️  Unrealistically positive - possible data filtering issue")
+            warnings.append("Unrealistically positive - possible data filtering issue")
         
         # Check confidence score distribution
         conf_mean = self.df['sentiment_confidence'].mean()
         conf_std = self.df['sentiment_confidence'].std()
         
         if conf_mean > 0.95:
-            warnings.append("⚠️  Suspiciously high average confidence - check for overfitting")
+            warnings.append("Suspiciously high average confidence - check for overfitting")
         
         if conf_std < 0.05:
-            warnings.append("⚠️  Very low confidence variance - possible model issues")
+            warnings.append("Very low confidence variance - possible model issues")
         
         # Check for correlation between likes and sentiment
         if 'like_count' in self.df.columns:
@@ -458,14 +458,14 @@ class SentimentValidator:
             if total_likes > 0:
                 negative_like_share = self.df[self.df['sentiment_label'].isin(['Negative', 'Very Negative'])]['like_count'].sum() / total_likes
                 if negative_like_share > 0.4:
-                    warnings.append("⚠️  Negative comments receiving high engagement - major issue")
+                    warnings.append("Negative comments receiving high engagement - major issue")
         
         if warnings:
             print(f"\nStatistical Warnings:")
             for warning in warnings:
                 print(warning)
         else:
-            print(f"\n✅ Statistical validation passed - distribution looks reasonable")
+            print(f"\nStatistical validation passed - distribution looks reasonable")
         
         return {
             'sentiment_distribution': sentiment_dist.to_dict(),
