@@ -217,7 +217,6 @@ def quick_sentiment_summary(df):
         print("LOW NEGATIVE SENTIMENT - Good customer satisfaction")
 
 
-
 class SentimentValidator:
     """
     Validate BERT sentiment analysis results through various methods.
@@ -241,84 +240,133 @@ class SentimentValidator:
         if missing_cols:
             raise ValueError(f"Missing required columns: {missing_cols}")
     
-    def create_manual_validation_sample(self, n=50, strategy='random', save_path=None):
+    
+    def create_low_confidence_validation_sample(self, confidence_threshold=0.7, save_path=None):
         """
-        Create a sample for manual validation.
+        Create validation sample focusing only on low confidence predictions.
         
         Args:
-            n: Number of samples to create
-            strategy: 'random', 'low_confidence', 'high_confidence', or 'mixed'
+            confidence_threshold: Threshold below which predictions are considered low confidence
             save_path: Optional path to save validation CSV
             
         Returns:
-            DataFrame ready for manual labeling
+            DataFrame ready for manual labeling of low confidence predictions
         """
-        if strategy == 'random':
-            sample = self.df.sample(n)
-        elif strategy == 'low_confidence':
-            # Focus on predictions model is unsure about
-            low_conf = self.df[self.df['sentiment_confidence'] < 0.7]
-            sample = low_conf.sample(min(n, len(low_conf)))
-        elif strategy == 'high_confidence':
-            # Check if high confidence predictions are actually correct
-            high_conf = self.df[self.df['sentiment_confidence'] > 0.9]
-            sample = high_conf.sample(min(n, len(high_conf)))
-        elif strategy == 'mixed':
-            # Balanced sample across confidence levels
-            n_per_group = n // 3
-            low_conf = self.df[self.df['sentiment_confidence'] < 0.6].sample(min(n_per_group, len(self.df[self.df['sentiment_confidence'] < 0.6])))
-            mid_conf = self.df[(self.df['sentiment_confidence'] >= 0.6) & (self.df['sentiment_confidence'] <= 0.8)].sample(min(n_per_group, len(self.df[(self.df['sentiment_confidence'] >= 0.6) & (self.df['sentiment_confidence'] <= 0.8)])))
-            high_conf = self.df[self.df['sentiment_confidence'] > 0.8].sample(min(n_per_group, len(self.df[self.df['sentiment_confidence'] > 0.8])))
-            sample = pd.concat([low_conf, mid_conf, high_conf])
-        else:
-            raise ValueError("Strategy must be 'random', 'low_confidence', 'high_confidence', or 'mixed'")
+        # Filter for low confidence predictions
+        low_conf = self.df[self.df['sentiment_confidence'] < confidence_threshold].copy()
+        
+        if len(low_conf) == 0:
+            print(f"No predictions found below confidence threshold {confidence_threshold}")
+            return pd.DataFrame()
+        
+        print(f"Found {len(low_conf)} low confidence predictions (< {confidence_threshold})")
         
         # Create validation DataFrame
-        validation_df = sample[['text', 'sentiment_label', 'sentiment_confidence']].copy()
-        validation_df = validation_df.sort_values('sentiment_confidence', ascending=False)
-        validation_df['manual_label'] = ''  # For human to fill
-        validation_df['correct'] = ''       # For marking True/False
+        validation_df = low_conf[['text', 'sentiment_label', 'sentiment_confidence']].copy()
+        validation_df = validation_df.sort_values('sentiment_confidence', ascending=True)  # Lowest confidence first
+        validation_df['manual_label'] = ''  # For human to fill with correct sentiment
         validation_df['notes'] = ''         # For additional comments
         
         if save_path:
             validation_df.to_csv(save_path, index=False)
-            print(f"Manual validation sample saved to {save_path}")
-            print(f"Instructions: Fill 'manual_label' column with your assessment")
-            print(f"Mark 'correct' as True/False, add 'notes' if needed")
+            print(f"Low confidence validation sample saved to {save_path}")
+            print(f"Instructions: Fill 'manual_label' column with correct sentiment (Positive/Negative/Neutral)")
         
         return validation_df
+    
+    def apply_manual_corrections(self, validation_df):
+        """
+        Override BERT predictions with manual corrections and return corrected dataset.
+        
+        Args:
+            validation_df: Completed validation DataFrame with 'manual_label' filled
+            
+        Returns:
+            Complete DataFrame with manual corrections applied
+        """
+        if 'manual_label' not in validation_df.columns:
+            raise ValueError("Validation DataFrame missing 'manual_label' column")
+        
+        # Filter for entries with manual labels
+        manual_corrections = validation_df[validation_df['manual_label'].str.strip() != ''].copy()
+        
+        if len(manual_corrections) == 0:
+            print("No manual corrections found")
+            return self.df.copy()
+        
+        print(f"Applying {len(manual_corrections)} manual corrections...")
+        
+        # Create corrected DataFrame
+        df_corrected = self.df.copy()
+        
+        # Apply corrections by matching text (assuming text is unique enough)
+        corrections_applied = 0
+        for _, correction in manual_corrections.iterrows():
+            text_to_correct = correction['text']
+            new_label = correction['manual_label'].strip()
+            
+            # Validate manual label
+            if new_label not in ['Positive', 'Negative', 'Neutral']:
+                print(f"Warning: Invalid manual label '{new_label}' for text: {text_to_correct[:50]}...")
+                continue
+            
+            # Find matching rows and apply correction
+            mask = df_corrected['text'] == text_to_correct
+            matching_rows = df_corrected.loc[mask]
+            
+            if len(matching_rows) == 1:
+                df_corrected.loc[mask, 'sentiment_label'] = new_label
+                df_corrected.loc[mask, 'manual_correction'] = True
+                corrections_applied += 1
+            elif len(matching_rows) > 1:
+                print(f"Warning: Multiple matches found for text: {text_to_correct[:50]}...")
+            else:
+                print(f"Warning: No match found for text: {text_to_correct[:50]}...")
+        
+        # Add flag for non-corrected predictions
+        if 'manual_correction' not in df_corrected.columns:
+            df_corrected['manual_correction'] = False
+        df_corrected['manual_correction'] = df_corrected['manual_correction'].fillna(False)
+        
+        print(f"Successfully applied {corrections_applied} manual corrections")
+        print(f"Corrected predictions: {corrections_applied}")
+        print(f"Original BERT predictions: {len(df_corrected) - corrections_applied}")
+        
+        return df_corrected
     
     def calculate_validation_accuracy(self, validation_df):
         """
         Calculate accuracy from completed manual validation.
         
         Args:
-            validation_df: Completed validation DataFrame with 'correct' column filled
+            validation_df: Completed validation DataFrame with 'manual_label' column filled
             
         Returns:
             Dictionary with accuracy metrics
         """
-        if 'correct' not in validation_df.columns:
-            raise ValueError("Validation DataFrame missing 'correct' column")
+        if 'manual_label' not in validation_df.columns:
+            raise ValueError("Validation DataFrame missing 'manual_label' column")
         
         # Filter out entries without manual validation
-        completed = validation_df[validation_df['correct'].isin([True, False, 'True', 'False', 'true', 'false'])]
+        completed = validation_df[validation_df['manual_label'].str.strip() != ''].copy()
         
         if len(completed) == 0:
             print("No completed validations found")
             return None
         
-        # Convert to boolean if string
-        completed = completed.copy()
-        completed['correct'] = completed['correct'].astype(str).str.lower().map({'true': True, 'false': False})
+        # Check if BERT prediction matches manual label
+        completed['correct'] = completed['sentiment_label'] == completed['manual_label']
         
         total_validated = len(completed)
         correct_predictions = completed['correct'].sum()
         accuracy = (correct_predictions / total_validated) * 100
         
         # Accuracy by confidence level
-        high_conf_acc = completed[completed['sentiment_confidence'] > 0.8]['correct'].mean() * 100 if len(completed[completed['sentiment_confidence'] > 0.8]) > 0 else 0
-        low_conf_acc = completed[completed['sentiment_confidence'] < 0.6]['correct'].mean() * 100 if len(completed[completed['sentiment_confidence'] < 0.6]) > 0 else 0
+        high_conf_mask = completed['sentiment_confidence'] > 0.8
+        low_conf_mask = completed['sentiment_confidence'] < 0.6
+        
+        high_conf_acc = completed[high_conf_mask]['correct'].mean() * 100 if high_conf_mask.sum() > 0 else 0
+        low_conf_acc = completed[low_conf_mask]['correct'].mean() * 100 if low_conf_mask.sum() > 0 else 0
         
         # Accuracy by sentiment
         sentiment_accuracy = completed.groupby('sentiment_label')['correct'].agg(['count', 'sum', 'mean']).round(3)
