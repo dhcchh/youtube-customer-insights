@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 
 class YouTubeCommentLoader:
     """
-    Class for retrieving YouTube comments from videos using the YouTube Data API.
+    Class for retrieving YouTube comments and video statistics using the YouTube Data API.
     Handles pagination and rate limiting to fetch all comments from a video.
     """
     
@@ -43,6 +43,78 @@ class YouTubeCommentLoader:
         else:
             raise ValueError("Invalid YouTube URL format")
     
+    def get_video_stats(self, video_id, verbose=True, save_to_dir=None, dislike_count=0):
+        """
+        Fetch video statistics (views, likes, comment count).
+
+        Args:
+            video_id: The YouTube video ID (NOT URL)
+            verbose: Whether to print results
+            save_to_dir: Directory to save stats CSV (None to skip saving)
+            dislike_count: Hardcoded dislike count (default: 0)
+            
+        Returns:
+            Dictionary with video statistics
+        """
+        try:
+            # Debug: print the actual video_id being used
+            if verbose:
+                print(f"Attempting to fetch stats for video ID: '{video_id}'")
+            
+            request = self.youtube.videos().list(
+                part="statistics,snippet",
+                id=video_id
+            )
+            
+            response = request.execute()
+            
+            # Debug: print the response structure
+            if verbose:
+                print(f"API response items count: {len(response.get('items', []))}")
+            
+            if not response['items']:
+                raise ValueError(f"Video with ID '{video_id}' not found. Check if the video exists and is public.")
+            
+            video_data = response['items'][0]
+            stats = video_data['statistics']
+            snippet = video_data['snippet']
+            
+            video_stats = {
+                'video_id': video_id,
+                'title': snippet['title'],
+                'view_count': int(stats.get('viewCount', 0)),
+                'like_count': int(stats.get('likeCount', 0)),
+                'dislike_count': dislike_count,  # User-provided value
+                'comment_count': int(stats.get('commentCount', 0)),
+                'published_at': snippet['publishedAt'],
+                'channel_title': snippet['channelTitle']
+            }
+            
+            if verbose:
+                print(f"Video: {video_stats['title']}")
+                print(f"Views: {video_stats['view_count']:,}")
+                print(f"Likes: {video_stats['like_count']:,}")
+                print(f"Dislikes: {video_stats['dislike_count']} (hardcoded)")
+                print(f"Comments: {video_stats['comment_count']:,}")
+            
+            # Save to directory if specified
+            if save_to_dir:
+                import os
+                os.makedirs(save_to_dir, exist_ok=True)
+                
+                stats_df = pd.DataFrame([video_stats])
+                filename = f"{save_to_dir}/video_statistics_{video_id}.csv"
+                stats_df.to_csv(filename, index=False)
+                
+                if verbose:
+                    print(f"Saved video statistics to {filename}")
+            
+            return video_stats
+        
+        except HttpError as e:
+            print(f"An HTTP error occurred: {e}")
+            return None
+        
     def get_video_comments(self, video_id, max_results=None, batch_size=100, 
                           verbose=True, sleep_time=0.1):
         """

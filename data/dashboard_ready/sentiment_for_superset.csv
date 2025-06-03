@@ -1,0 +1,4 @@
+sentiment_type,count,percentage,total_likes,avg_likes
+Negative,161,65.71,1688,10.48
+Neutral,59,24.08,338,5.73
+Positive,25,10.2,150,6.0
