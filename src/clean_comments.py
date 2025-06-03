@@ -92,14 +92,10 @@ class BERTYouTubeCommentCleaner:
         
         df_cleaned = df.copy()
         
-        # Apply cleaning
         df_cleaned['cleaned_text'] = df_cleaned[text_column].apply(self.clean_text)
-        
-        # Add basic metadata
         df_cleaned['original_length'] = df_cleaned[text_column].str.len()
         df_cleaned['cleaned_length'] = df_cleaned['cleaned_text'].str.len()
         
-        # Remove empty comments after cleaning
         initial_count = len(df_cleaned)
         df_cleaned = df_cleaned[df_cleaned['cleaned_text'].str.len() >= self.min_length].copy()
         df_cleaned.reset_index(drop=True, inplace=True)

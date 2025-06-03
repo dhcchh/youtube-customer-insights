@@ -125,12 +125,11 @@ class FeatureExtractor:
         chart_data = []
         
         for category, data in results.items():
-            if data['count'] > 0:  # Only include categories with matches
+            if data['count'] > 0:  
                 issue_name = category.replace('_', ' ').title()
                 count = data['count']
                 total_likes = data['total_likes']
                 
-                # If either is zero, use sum instead of multiplication
                 if count == 0 or total_likes == 0:
                     weighted_score = count + total_likes
                 else:
@@ -143,6 +142,5 @@ class FeatureExtractor:
                     'weighted_score': weighted_score
                 })
         
-        # Sort by weighted score descending
         df = pd.DataFrame(chart_data)
         return df.sort_values('weighted_score', ascending=False) if not df.empty else df

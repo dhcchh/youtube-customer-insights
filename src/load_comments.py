@@ -301,7 +301,6 @@ class YouTubeCommentLoader:
             else:
                 print(f"An HTTP error occurred: {e}")
         
-        # Convert to DataFrame
         df = pd.DataFrame(all_comments)
         
         # Save final result if requested
