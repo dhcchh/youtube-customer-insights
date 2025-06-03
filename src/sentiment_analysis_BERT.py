@@ -34,7 +34,6 @@ class BERTSentimentAnalyzer:
         
         print(f"Using device: {self.device}")
         
-        # Load BERT model and tokenizer
         print("Loading BERT model...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -197,7 +196,6 @@ def quick_sentiment_summary(df):
         print(f"Negative comments received {negative_like_pct:.1f}% of total likes")
         print(f"Positive comments received {positive_like_pct:.1f}% of total likes")
         
-        # Average likes per comment by sentiment
         avg_negative_likes = negative_likes / negative_count if negative_count > 0 else 0
         avg_positive_likes = positive_likes / positive_count if positive_count > 0 else 0
         avg_neutral_likes = neutral_likes / neutral_count if neutral_count > 0 else 0
@@ -207,7 +205,6 @@ def quick_sentiment_summary(df):
         print(f"Neutral:  {avg_neutral_likes:.1f} likes/comment") 
         print(f"Positive: {avg_positive_likes:.1f} likes/comment")
     
-    # Risk assessment
     print(f"\nRisk Assessment:")
     if negative_pct > 40:
         print("HIGH NEGATIVE SENTIMENT - Requires immediate attention")
