@@ -46,7 +46,7 @@ This project demonstrates end-to-end NLP pipeline development:
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/dhcchh/nespresso-vid-proj
+git clone https://github.com/dhcchh/youtube-customer-insights
 cd nespresso-vid-proj
 ```
 
