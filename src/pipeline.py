@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.load_comments import YouTubeCommentLoader
+from src.load_comments import YouTubeDataLoader
 from src.clean_comments import BERTYouTubeCommentCleaner
 from src.sentiment_analysis_BERT import BERTSentimentAnalyzer, quick_sentiment_summary
 from src.feature_extractor import FeatureExtractor
@@ -25,21 +25,21 @@ class Pipeline:
         if not self.api_key:
             raise ValueError("Need YouTube API key: set API_KEY env var or pass api_key")
         
-        # Create folders
         self.folders = ['data/raw', 'data/processed', 'data/st_dashboard_ready', 'data/exports']
         for folder in self.folders:
             Path(folder).mkdir(parents=True, exist_ok=True)
         
-        # Initialize components
-        self.loader = YouTubeCommentLoader(self.api_key)
+        self.loader = YouTubeDataLoader(self.api_key)
         self.cleaner = BERTYouTubeCommentCleaner()
         self.analyzer = None  # Load when needed
         self.extractor = FeatureExtractor()
         
         # Simple logging
-        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-        self.logger = logging.getLogger(__name__)
+        # level=logging.INFO: Only shows INFO level and above (INFO, WARNING, ERROR, CRITICAL)
     
+        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+        self.logger = logging.getLogger(__name__)  # Creates a logger instance for this specific module
+
     def run(self, video_url):
         """
         Run complete analysis pipeline.
@@ -54,31 +54,24 @@ class Pipeline:
         
         self.logger.info(f"Starting analysis for video: {video_id}")
         
-        # 1. Get data
         self.logger.info("Step 1: Loading data...")
         comments_df, video_stats = self._load_data(video_url, video_id)
         
-        # 2. Clean data
         self.logger.info("Step 2: Cleaning data...")
         cleaned_df = self._clean_data(comments_df, video_id)
         
-        # 3. Sentiment analysis
         self.logger.info("Step 3: Analyzing sentiment...")
         sentiment_df = self._analyze_sentiment(cleaned_df, video_id)
         
-        # 4. Extract business insights
         self.logger.info("Step 4: Extracting insights...")
         chart_data = self._extract_insights(sentiment_df, video_id)
         
-        # 5. Prepare dashboard data
         self.logger.info("Step 5: Preparing dashboard data...")
         self._prepare_dashboard_data(sentiment_df, chart_data, video_stats, video_id)
         
-        # 6. Export final results
         self.logger.info("Step 6: Exporting results...")
         self._export_results(sentiment_df, video_id)
         
-        # Return summary
         results = {
             'video_id': video_id,
             'total_comments': len(sentiment_df),
@@ -88,7 +81,7 @@ class Pipeline:
             'dashboard_ready': True
         }
         
-        self.logger.info("✅ Analysis complete!")
+        self.logger.info("Analysis complete!")
         return results
     
     def _load_data(self, video_url, video_id):
@@ -103,9 +96,7 @@ class Pipeline:
             video_stats = pd.read_csv(stats_file).iloc[0].to_dict()
         else:
             self.logger.info("Downloading fresh data...")
-            # Get video stats with hardcoded dislike count
             video_stats = self.loader.get_video_stats(video_id, save_to_dir="data/raw", dislike_count=280)
-            # Get comments
             comments_df = self.loader.get_all_comments(
                 video_url, 
                 save_to_file=f"data/raw/raw_{video_id}"
@@ -130,8 +121,6 @@ class Pipeline:
         
         sentiment_df = self.analyzer.analyze_dataframe(cleaned_df)
         sentiment_df.to_csv(f"data/processed/sentiment_{video_id}.csv", index=False)
-        
-        # Print summary
         quick_sentiment_summary(sentiment_df)
         return sentiment_df
     
@@ -149,7 +138,6 @@ class Pipeline:
     def _prepare_dashboard_data(self, sentiment_df, chart_data, video_stats, video_id):
         """Prepare data for Streamlit dashboard"""
         
-        # Sentiment summary
         sentiment_summary = []
         total = len(sentiment_df)
         for sentiment in ['Negative', 'Neutral', 'Positive']:
@@ -165,7 +153,6 @@ class Pipeline:
         
         pd.DataFrame(sentiment_summary).to_csv("data/st_dashboard_ready/sentiment_for_st.csv", index=False)
         
-        # Features with impact categories
         if not chart_data.empty:
             chart_data['impact_category'] = chart_data['weighted_score'].apply(
                 lambda x: 'High Impact' if x > chart_data['weighted_score'].quantile(0.7) 
@@ -174,7 +161,6 @@ class Pipeline:
             )
             chart_data.to_csv("data/st_dashboard_ready/features_for_st.csv", index=False)
         
-        # Summary metrics
         negative_pct = (sentiment_df['sentiment_label'] == 'Negative').mean() * 100
         summary_metrics = [
             {'metric': 'Total Comments', 'value': len(sentiment_df)},
@@ -184,7 +170,6 @@ class Pipeline:
         ]
         pd.DataFrame(summary_metrics).to_csv("data/st_dashboard_ready/summary_for_st.csv", index=False)
         
-        # Video stats
         pd.DataFrame([video_stats]).to_csv(f"data/st_dashboard_ready/video_statistics_{video_id}.csv", index=False)
     
     def _export_results(self, sentiment_df, video_id):

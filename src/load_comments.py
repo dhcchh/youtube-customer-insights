@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
-class YouTubeCommentLoader:
+class YouTubeDataLoader:
     """
     Class for retrieving YouTube comments and video statistics using the YouTube Data API.
     Handles pagination and rate limiting to fetch all comments from a video.
@@ -249,7 +249,6 @@ class YouTubeCommentLoader:
                     textFormat="plainText"
                 )
                 
-                # Execute request
                 response = request.execute()
                 
                 # Process comment threads
@@ -303,7 +302,6 @@ class YouTubeCommentLoader:
         
         df = pd.DataFrame(all_comments)
         
-        # Save final result if requested
         if save_to_file and not df.empty:
             final_filename = f"{save_to_file}_all_comments.csv"
             df.to_csv(final_filename, index=False)
