@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.load_comments import YouTubeCommentLoader
+from src.load_comments import YouTubeDataLoader
 from src.clean_comments import BERTYouTubeCommentCleaner
 from src.sentiment_analysis_BERT import BERTSentimentAnalyzer, quick_sentiment_summary
 from src.feature_extractor import FeatureExtractor
@@ -29,7 +29,7 @@ class Pipeline:
         for folder in self.folders:
             Path(folder).mkdir(parents=True, exist_ok=True)
         
-        self.loader = YouTubeCommentLoader(self.api_key)
+        self.loader = YouTubeDataLoader(self.api_key)
         self.cleaner = BERTYouTubeCommentCleaner()
         self.analyzer = None  # Load when needed
         self.extractor = FeatureExtractor()
@@ -96,7 +96,6 @@ class Pipeline:
             video_stats = pd.read_csv(stats_file).iloc[0].to_dict()
         else:
             self.logger.info("Downloading fresh data...")
-            # Get video stats with hardcoded dislike count
             video_stats = self.loader.get_video_stats(video_id, save_to_dir="data/raw", dislike_count=280)
             comments_df = self.loader.get_all_comments(
                 video_url, 

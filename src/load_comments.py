@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
-class YouTubeCommentLoader:
+class YouTubeDataLoader:
     """
     Class for retrieving YouTube comments and video statistics using the YouTube Data API.
     Handles pagination and rate limiting to fetch all comments from a video.
