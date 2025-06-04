@@ -1,5 +1,5 @@
 """
-Just run: python run_analysis.py
+Just run: python run_analysis.py or 'play' this file 
 """
 
 import os
@@ -38,7 +38,7 @@ def main():
         print(f"\n Next steps:")
         print(f"1. Run dashboard: streamlit run app.py")
         print(f"2. Check results in data/exports/")
-        print(f"3. Upload data/st_dashboard_ready/ to Apache Superset")
+        print(f"3. Upload data/st_dashboard_ready/ to Streamlit")
         
         if results['negative_pct'] > 50:
             print(f"\n WARNING: High negative sentiment ({results['negative_pct']:.1f}%)")

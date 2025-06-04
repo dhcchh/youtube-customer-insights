@@ -492,7 +492,6 @@ class SentimentValidator:
         if conf_std < 0.05:
             warnings.append("Very low confidence variance - possible model issues")
         
-        # Check for correlation between likes and sentiment
         if 'like_count' in self.df.columns:
             sentiment_likes = self.df.groupby('sentiment_label')['like_count'].agg(['count', 'sum', 'mean']).round(2)
             print(f"\nLikes by Sentiment:")
@@ -536,13 +535,10 @@ class SentimentValidator:
         print("SENTIMENT ANALYSIS VALIDATION REPORT")
         print("="*60)
         
-        # 1. Statistical validation
         statistical_results = self.run_statistical_validation()
         
-        # 2. Confidence analysis  
         confidence_results = self.analyze_confidence_distribution()
         
-        # 3. Create manual validation sample
         manual_sample = None
         if save_manual_sample:
             print(f"\n" + "="*40)
