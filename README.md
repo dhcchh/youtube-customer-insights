@@ -105,7 +105,7 @@ The dashboard provides:
 - Manual validation framework included (`SentimentValidator`)
 
 ### Feature Extraction (Nespresso-Specific)
-Business issue categories detected via regex:
+Business issue categories detected via Regex:
 - **Descaling Button Requests**: "descaling.*button", "add.*descaling.*button"
 - **App Improvements**: "app.*should.*button", "app.*descaling.*mode"
 - **Simplification Requests**: "simpler.*process", "one.*button"
@@ -131,12 +131,12 @@ Business issue categories detected via regex:
 ## 🎓 Learning Objectives
 
 This project demonstrates:
+- **Business Intelligence**: Converting unstructured text to actionable insights
 - **NLP Pipeline Development**: End-to-end text processing workflow
 - **API Integration**: YouTube Data API usage with pagination and rate limiting
 - **Transformer Models**: BERT/RoBERTa for sentiment classification
-- **Business Intelligence**: Converting unstructured text to actionable insights
-- **Dashboard Development**: Streamlit for stakeholder communication
 - **Model Validation**: Confidence analysis and manual validation frameworks
+- **Dashboard Development**: Streamlit for stakeholder communication
 
 ## 📦 Dependencies
 
@@ -166,5 +166,5 @@ scikit-learn>=1.1.0
 ### Data Directory Details
 - **`data/raw/`**: Original YouTube data (comments CSV, video statistics)
 - **`data/processed/`**: Cleaned comments, sentiment analysis results, feature extraction
-- **`data/st_dashboard_ready/`**: Aggregated data optimized for Streamlit visualization
+- **`data/st_dashboard_ready/`**: Aggregated data ready for Streamlit visualization
 - **`data/exports/`**: Final business reports and analysis summaries
