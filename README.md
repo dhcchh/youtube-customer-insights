@@ -28,9 +28,9 @@ This project demonstrates end-to-end NLP pipeline development:
 │   ├── exports/                 # Final analysis results & reports
 │   ├── processed/               # Cleaned data (where necessary) & sentiment analysis
 │   ├── raw/                     # Raw YouTube comments & video stats
-│   └── st_dashboard_ready/      # Streamlit-optimized data files
+│   └── st_dashboard_ready/      # Data files transformed to a form suitable for visualisation
 ├── notebooks/ # Independent testing by myself while developing this project
-└── .env                         # API keys (create this file)
+└── .env                         # API key (create this file on your own)
 ```
 
 ## 🚀 Quick Start
