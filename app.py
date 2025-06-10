@@ -4,7 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 
-# Configure page
 st.set_page_config(
     page_title="YouTube Comment Analysis Dashboard",
     page_icon="📊",
@@ -16,7 +15,6 @@ def load_data():
     try:
         base_path = 'data/st_dashboard_ready/'
         
-        # Load required files
         sentiment_df = pd.read_csv(f'{base_path}sentiment_for_st.csv')
         feature_df = pd.read_csv(f'{base_path}features_for_st.csv')
         summary_df = pd.read_csv(f'{base_path}summary_for_st.csv')
@@ -34,7 +32,6 @@ def load_data():
 
 def create_sentiment_pie_chart(sentiment_df):
     """Create sentiment distribution pie chart"""
-    # Ensure the color mapping works by sorting the data
     sentiment_df_sorted = sentiment_df.sort_values('sentiment_type')
     
     fig = px.pie(
@@ -71,7 +68,6 @@ def create_engagement_bar_chart(sentiment_df):
 
 def create_issue_bar_chart(feature_df):
     """Create top issues horizontal bar chart"""
-    # Sort by count for better visualization
     df_sorted = feature_df.sort_values('count', ascending=True)
     
     fig = px.bar(
@@ -125,13 +121,11 @@ def main():
     st.title("🎬 YouTube Comment Analysis Dashboard")
     st.subheader("Nespresso Descaling Video Analysis")
     
-    # Load data
     sentiment_df, feature_df, summary_df, video_df = load_data()
     
     if sentiment_df is None:
         st.stop()
     
-    # Surface Level Metrics
     st.markdown("### 📊 Surface Level Metrics")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -181,7 +175,6 @@ def main():
     
     st.markdown("---")
     
-    # Comment Analysis KPIs
     st.markdown("### 💬 Comment Analysis Metrics")
     
     col1, col2, col3, col4 = st.columns(4)
